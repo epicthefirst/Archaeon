@@ -95,6 +95,10 @@ public class PlayerScript : MonoBehaviour
     {
         playerCarrierList.Remove(carrierRemove);
     }
+    public int GetCombatLevel()
+    {
+        return playerWeaponLevel;
+    }
     public void test()
     {
         Debug.Log("test success");

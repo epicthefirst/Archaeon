@@ -91,7 +91,7 @@ public class StarScript : MonoBehaviour, IPointerClickHandler
     //Battle
     public bool isGoingToFight = false;
 
-    List<String> participatingFactions = new();
+    List<FightingEntity> participatingFactions = new();
     Dictionary<GameInformation.PlayerClass, List<ShipController>> invadingShips = new();
 
 
@@ -268,12 +268,63 @@ public class StarScript : MonoBehaviour, IPointerClickHandler
         updatePlanets();
     }
 
+    public class FightingEntity
+    {
+        public int shipCount = 0;
+
+        public int baseCombatStrength = 0;
+        public int combatBonusSelf = 0;
+        public int combatBonusToOtherAllies = 0;
+        public int combatBonusToOtherEnemies = 0;
+        public int combatDebuffSelf = 0;
+        public int combatDebuffOthers = 0;
+        public GameInformation.PlayerClass entity;
+        public List<FightingEntity> allies = new();
+
+        public void FightingEntity(GameInformation.PlayerClass Entity)
+        {
+            this.entity = Entity;
+            baseCombatStrength = entity.GetCombatLevel();
+        }
+
+        public void SetShipCount(int count)
+        {
+            shipCount = count;
+        }
+
+        public void SetCombatBonusSelf(int bonus)
+        {
+            if(bonus > combatBonusSelf)
+            {
+                combatBonusSelf = bonus;
+            }
+        }
+
+        public void SetCombatDebuffSelf(int debuff)
+        {
+            if(debuff > SetCombatDebuffSelf)
+            {
+                SetCombatDebuffSelf = debuff;
+            }
+        }
+
+        //Need all fighting entities established before doing these
+        public void SetCombatBonusToOtherAllies(int debuff)
+        {
+            if(debuff > SetCombatDebuffSelf)
+            {
+                SetCombatDebuffSelf = debuff;
+            }
+        }
+    }
+
     public void Fight(object sender, FightTickEvent e)
     {
         if(owner == null && invadingShips.Keys.Count == 1) //When most of this function is useless
         {
             foreach (GameInformation.PlayerClass key in invadingShips.Keys)
             {
+
                 owner = key;
                 if(key == null)
                 {
@@ -283,6 +334,8 @@ public class StarScript : MonoBehaviour, IPointerClickHandler
                 {
                     AttachCarrier(carrier.gameObject);
                 }
+
+
             }
             owner.AddStarToOwner(gameObject);
             EndFight();
@@ -292,16 +345,29 @@ public class StarScript : MonoBehaviour, IPointerClickHandler
 
 
 
+        
+
 
 
 
         //Sorta have implementation for multiple factions
+        //Want to make fighting even, if 2 players attack an occupied planet, all 3 should fight eachother
+
+        Dictionary<FightingEntity, int> combatRatios = new();
+
+        
+
         int tally = 0;
         int tempTally = 0;
         int bestTally = 0;
-        GameInformation.PlayerClass best = null;
+
+        FightingEntity best = null;
+        participatingFactions = new();
+        
         foreach (GameInformation.PlayerClass key in invadingShips.Keys)
         {
+            participatingFactions.add(new FightingEntity(key));
+
             foreach(ShipController carrier in invadingShips[key])
             {
                 tempTally += carrier.ShipCount;
