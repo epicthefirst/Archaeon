@@ -10,10 +10,9 @@ public class PlayerScript : MonoBehaviour
     private int totalPlayerIndustryCount;
     private int totalPlayerScienceCount;
     private int totalPlayerShipCount;
-    private int playerWeaponLevel;
-    private int playerMnufacturingLevel;
-    private int playerScanningLevel;
-    private int playerRangeLevel;
+
+    public Research playerResearchScript;
+
     private List<GameObject> playerCarrierList = new List<GameObject>();
     private List<GameObject> playerStarList = new List<GameObject>();
     public GameInformation.PlayerClass playerClass;
@@ -97,7 +96,7 @@ public class PlayerScript : MonoBehaviour
     }
     public int GetCombatLevel()
     {
-        return playerWeaponLevel;
+        return playerResearchScript.GetWeaponsLevel();
     }
     public void test()
     {

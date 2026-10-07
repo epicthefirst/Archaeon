@@ -17,6 +17,8 @@ public class EnemyBotBehavior : MonoBehaviour
     public Pathfinder pathfinderScript;
     public int carrierNameIncrement;
 
+    public Research botResearchScript;
+
     private List<GameObject> carrierList = new List<GameObject>();
     private Pathfinder.MaxObjBinaryHeap carrierSizeHeap = new Pathfinder.MaxObjBinaryHeap(1024); //Change later
     private Pathfinder.MaxObjBinaryHeap idleCarrierHeap = new Pathfinder.MaxObjBinaryHeap(1024); //Change later
@@ -45,6 +47,8 @@ public class EnemyBotBehavior : MonoBehaviour
         
         this.random = random;
         this.bot = bot;
+
+        botResearchScript = new Research(bot, 1, 1, 1, 1);
 
         money = GameInformation.playerMoney;
         this.mapGenerationScript = mapGenerationScript;

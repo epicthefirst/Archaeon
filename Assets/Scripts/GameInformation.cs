@@ -221,5 +221,17 @@ public static class GameInformation
             }
         }
 
+        public Research GetResearchScript()
+        {
+            if(!isBot)
+            {
+                return playerScript.playerResearchScript;
+            }
+            else
+            {
+                return botScript.botResearchScript;
+            }
+        }
+
     }
 }
