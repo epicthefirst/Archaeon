@@ -104,6 +104,8 @@ public static class GameInformation
         public EnemyBotBehavior botScript;
         public bool isBot;
 
+        public List<PlayerClass> Allies;
+
         public Color primaryColour;
         public Color secondaryColour;
         public Material primaryMaterial;

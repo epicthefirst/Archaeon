@@ -94,6 +94,11 @@ public class StarScript : MonoBehaviour, IPointerClickHandler
     List<FightingEntity> participatingFactions = new();
     Dictionary<GameInformation.PlayerClass, List<ShipController>> invadingFactionsDictionary = new();
 
+    //Allies
+    public int AlliedCarrierCount;
+    public Dictionary<GameInformation.PlayerClass, List<ShipController>> DockedFactions = new();
+
+
 
     public void Initialize(int Id, string Name, List<int> planetList, List<Tuple<int,int>> PlanetTimings, int Range, GameInformation.PlayerClass owner, GameObject canvas, int GarrisonCount, GameObject[] planetArray, int qualityMultiplier, Dictionary<int, int> slingshotWindowDurations)
     {
@@ -279,6 +284,7 @@ public class StarScript : MonoBehaviour, IPointerClickHandler
         public int combatDebuffSelf = 0;
         public int combatDebuffOthers = 0;
         public GameInformation.PlayerClass entity;
+        public List<FightingGroup>
         public List<FightingEntity> allies = new();
 
         public FightingEntity(GameInformation.PlayerClass Entity)
@@ -317,19 +323,35 @@ public class StarScript : MonoBehaviour, IPointerClickHandler
             }
         }
     }
+    public class FightingGroup
+    {
+        public int shipCount = 0;
+
+        public int baseCombatStrength = 0;
+        public int combatBonusSelf = 0;
+        public int combatBonusToOtherAllies = 0;
+        public int combatBonusToOtherEnemies = 0;
+        public int combatDebuffSelf = 0;
+        public int combatDebuffOthers = 0;
+
+        public List<FightingEntity>
+    }
 
     public void Fight(object sender, FightTickEvent e)
     {
         if(owner == null && invadingFactionsDictionary.Keys.Count == 1) //When most of this function is useless
         {
-            foreach (ShipController carrier in invadingFactionsDictionary[])
+            foreach (GameInformation.PlayerClass key in invadingFactionsDictionary.Keys) //Stupid but works
             {
-                AttachCarrier(carrier.gameObject);
+                foreach (ShipController carrier in invadingFactionsDictionary[key])
+                {
+                    AttachCarrier(carrier.gameObject);
+                }
+                owner.AddStarToOwner(gameObject);
+                EndFight();
+                Refresh();
+                return;
             }
-            owner.AddStarToOwner(gameObject);
-            EndFight();
-            Refresh();
-            return;
         }   
 
 
@@ -352,10 +374,16 @@ public class StarScript : MonoBehaviour, IPointerClickHandler
 
         FightingEntity best = null;
         participatingFactions = new();
+        foreach (GameInformation.PlayerClass ally in DockedFactions)
+        {
+            participatingFactions.Add(new FightingEntity(ally))
+        }
+        participatingFactions.Add(new FightingEntity(owner))
+        foreach
         
         foreach (GameInformation.PlayerClass key in invadingFactionsDictionary.Keys)
         {
-            currentEntity = new FightingEntity(key);
+            FightingEntity currentEntity = new FightingEntity(key);
             participatingFactions.Add(currentEntity);
 
             foreach(ShipController carrier in invadingFactionsDictionary[key])
@@ -498,6 +526,10 @@ public class StarScript : MonoBehaviour, IPointerClickHandler
             AttachCarrier(carrier);
             //Refresh();
         }
+        else if (owner.Allies.Contains(shipOwner))
+        {
+            AttachAlliedCarrier(carrier);
+        }
         else
         {
             isGoingToFight = true;
@@ -587,6 +619,13 @@ public class StarScript : MonoBehaviour, IPointerClickHandler
 
         PolygonRefresh();
         Refresh();
+    }
+    public void AttachAlliedCarrier(gameObject carrier)
+    {
+        CarrierList.Add(carrier);
+        AlliedCarrierList
+        CarrierCount += 1;
+        AlliedCarrierCount += 1;
     }
     public void ReduceShipCount(int shipCountReduction)
     {
