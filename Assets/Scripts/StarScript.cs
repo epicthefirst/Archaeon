@@ -276,15 +276,23 @@ public class StarScript : MonoBehaviour, IPointerClickHandler
     public class FightingEntity
     {
         public int shipCount = 0;
-
+        //base combat strength = owner's tech level + empire modifiers. Specific to entity, not side
         public int baseCombatStrength = 0;
+        //Specific to the carrier it's on, ie explorer gives debuff to itself only
         public int combatBonusSelf = 0;
-        public int combatBonusToOtherAllies = 0;
-        public int combatBonusToOtherEnemies = 0;
         public int combatDebuffSelf = 0;
-        public int combatDebuffOthers = 0;
+        //Applies to other ships in the same empire, and allies on the same side in combat, 
+        public int combatBonusTeam = 0;
+        public int combatDebuffTeam = 0;
+        //Applies combat wide
+        public int combatBonusToEnemies = 0;
+        public int combatDebuffToEnemies = 0;
+
+
+
+
         public GameInformation.PlayerClass entity;
-        public List<FightingGroup>
+        public List<FightingGroup> sides;
         public List<FightingEntity> allies = new();
 
         public FightingEntity(GameInformation.PlayerClass Entity)
@@ -325,16 +333,83 @@ public class StarScript : MonoBehaviour, IPointerClickHandler
     }
     public class FightingGroup
     {
+        //all numbers are absolute values, ie combatDebuffTeam = 4 != -4
         public int shipCount = 0;
+        private int weightedCount = 0;
 
-        public int baseCombatStrength = 0;
-        public int combatBonusSelf = 0;
-        public int combatBonusToOtherAllies = 0;
-        public int combatBonusToOtherEnemies = 0;
-        public int combatDebuffSelf = 0;
-        public int combatDebuffOthers = 0;
+        //Stuff that applies individually to different armies are accounted for here; tech level isn't shared between allies who fight together, but defender bonus does
+        public float weightedBaseCombatStrength = 0;
 
-        public List<FightingEntity>
+        public int combatBonusTeam = 0;
+        public int combatDebuffTeam = 0;
+
+        public int combatBonusToOthers = 0;
+        public int combatBonusFromOthers = 0;
+
+        public int combatDebuffToOthers = 0;
+        public int combatDebuffFromOthers = 0
+
+
+        public List<FightingEntity> members;
+
+        public void FightingGroup(List<FightingEntity> Members)
+        {
+            members = Members;
+            foreach (FightingEntity member in members)
+            {
+                shipCount += member.shipCount;
+                weightedCount += member.shipCount * (member.baseCombatStrength + member.combatBonusSelf +
+                SetCombatBonusTeam(member.combatBonusTeam);
+                SetCombatDebuffTeam(member.combatDebuffTeam);
+
+                SetCombatBonusToOthers(member.combatBonusToOtherEnemies);
+                SetCombatDebuffToOthers(member.combatDebuffToEnemies);
+
+
+
+
+
+
+            }
+        }
+
+
+        
+        public void SetCombatBonusTeam(int bonus)
+        {
+            if(bonus > combatBonusSelf)
+            {
+                combatBonusSelf = bonus;
+            }
+        }
+
+        public void SetCombatDebuffTeam(int debuff)
+        {
+            if(debuff > combatDebuffSelf)
+            {
+                combatDebuffSelf = debuff;
+            }
+        }
+
+        public void SetCombatBonusToOthers(int bonus)
+        {
+            if(bonus > combatBonusToOthers)
+            {
+                combatBonusToOtherEnemies = bonus;
+            }
+        }
+
+
+        public void SetCombatDebuffToOthers(int debuff)
+        {
+            if(debuff > combatDebuffToOthers)
+            {
+                combatDebuffToOthers = bonus;
+            }
+        }
+
+
+
     }
 
     public void Fight(object sender, FightTickEvent e)
