@@ -91,8 +91,7 @@ public class StarScript : MonoBehaviour, IPointerClickHandler
     //Battle
     public bool isGoingToFight = false;
 
-    List<FightingEntity> participatingFactions = new();
-    Dictionary<GameInformation.PlayerClass, List<ShipController>> invadingFactionsDictionary = new();
+    public Dictionary<GameInformation.PlayerClass, List<ShipController>> invadingFactionsDictionary = new();
 
     //Allies
     public int AlliedCarrierCount;
@@ -273,7 +272,7 @@ public class StarScript : MonoBehaviour, IPointerClickHandler
         updatePlanets();
     }
 
-    public class FightingEntity
+    public class FightingCarrier
     {
         public int shipCount = 0;
         //base combat strength = owner's tech level + empire modifiers. Specific to entity, not side
@@ -281,7 +280,7 @@ public class StarScript : MonoBehaviour, IPointerClickHandler
         //Specific to the carrier it's on, ie explorer gives debuff to itself only
         public int combatBonusSelf = 0;
         public int combatDebuffSelf = 0;
-        //Applies to other ships in the same empire, and allies on the same side in combat, 
+        //Applies to other ships in the same empire, and allies on the same side in combat
         public int combatBonusTeam = 0;
         public int combatDebuffTeam = 0;
         //Applies combat wide
@@ -291,20 +290,21 @@ public class StarScript : MonoBehaviour, IPointerClickHandler
 
 
 
-        public GameInformation.PlayerClass entity;
+        public ShipController carrier;
+        public GameInformation.PlayerClass shipOwner;
         public List<FightingGroup> sides;
         public List<FightingEntity> allies = new();
 
-        public FightingEntity(GameInformation.PlayerClass Entity)
+        public SpecialistScript specScript;
+
+        public FightingCarrier(ShipController Carrier)
         {
-            this.entity = Entity;
-            baseCombatStrength = entity.GetResearchScript().GetWeaponsLevel();
+            carrier = Carrier;
+            shipOwner = carrier.shipOwner;
+            shipCount = carrier.shipCount;
+            baseCombatStrength = shipOwner.GetResearchScript().GetWeaponsLevel();
         }
 
-        public void SetShipCount(int count)
-        {
-            shipCount = count;
-        }
 
         public void SetCombatBonusSelf(int bonus)
         {
@@ -338,7 +338,10 @@ public class StarScript : MonoBehaviour, IPointerClickHandler
         private int weightedCount = 0;
 
         //Stuff that applies individually to different armies are accounted for here; tech level isn't shared between allies who fight together, but defender bonus does
+        //weightedCount/shipCount
         public float weightedBaseCombatStrength = 0;
+        public int defenderBonus = 0;
+        public int attackerBonus = 0;
 
         public int combatBonusTeam = 0;
         public int combatDebuffTeam = 0;
@@ -347,30 +350,25 @@ public class StarScript : MonoBehaviour, IPointerClickHandler
         public int combatBonusFromOthers = 0;
 
         public int combatDebuffToOthers = 0;
-        public int combatDebuffFromOthers = 0
+        public int combatDebuffFromOthers = 0;
 
-
+        public GameInformation.PlayerClass leader;
         public List<FightingEntity> members;
 
-        public void FightingGroup(List<FightingEntity> Members)
+        public void FightingGroup(GameInformation.PlayerClass Leader)
         {
-            members = Members;
-            foreach (FightingEntity member in members)
-            {
-                shipCount += member.shipCount;
-                weightedCount += member.shipCount * (member.baseCombatStrength + member.combatBonusSelf +
-                SetCombatBonusTeam(member.combatBonusTeam);
-                SetCombatDebuffTeam(member.combatDebuffTeam);
+            leader = Leader;
+        }
+        public void AddMember(FightingEntity member)
+        {
+            members.Add(member);
 
-                SetCombatBonusToOthers(member.combatBonusToOtherEnemies);
-                SetCombatDebuffToOthers(member.combatDebuffToEnemies);
-
-
-
-
-
-
-            }
+            shipCount += member.shipCount;
+            weightedCount += member.shipCount * (member.baseCombatStrength + member.combatBonusSelf);
+            SetCombatBonusTeam(member.combatBonusTeam);
+            SetCombatDebuffTeam(member.combatDebuffTeam);
+            SetCombatBonusToOthers(member.combatBonusToOtherEnemies);
+            SetCombatDebuffToOthers(member.combatDebuffToEnemies);
         }
 
 
@@ -427,33 +425,31 @@ public class StarScript : MonoBehaviour, IPointerClickHandler
                 Refresh();
                 return;
             }
-        }   
-
-
-
-        
-
-
-
+        }  
 
         //Sorta have implementation for multiple factions
         //Want to make fighting even, if 2 players attack an occupied planet, all 3 should fight eachother
 
-        Dictionary<FightingEntity, int> combatRatios = new();
+        Dictionary<FightingGroup, float> combatRatios = new();
+        Dictionary<GameInformation.PlayerClass, List<FightingCarrier>> participatingCarriers = new();
 
-        
 
-        int tally = 0;
-        int tempTally = 0;
-        int bestTally = 0;
 
-        FightingEntity best = null;
-        participatingFactions = new();
+        List<FightingGroup> sides = new();
+        ownerSide = new FightingGroup(owner);
+        sides.Add(ownerSide);
+
+
         foreach (GameInformation.PlayerClass ally in DockedFactions)
         {
-            participatingFactions.Add(new FightingEntity(ally))
+            List<FightingCarrier> temp = new();
+            foreach(ShipController c in DockedFactions[ally])
+            {
+                temp.Add(c);
+            }
+            participatingCarriers.Add(ally, temp);
         }
-        participatingFactions.Add(new FightingEntity(owner))
+
         foreach
         
         foreach (GameInformation.PlayerClass key in invadingFactionsDictionary.Keys)
